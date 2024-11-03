@@ -477,6 +477,7 @@ pub mod primitive_type;
 pub(crate) mod properties;
 mod retriever;
 mod validator;
+mod value;
 
 pub use error::{ErrorIterator, ValidationError};
 pub use keywords::custom::Keyword;

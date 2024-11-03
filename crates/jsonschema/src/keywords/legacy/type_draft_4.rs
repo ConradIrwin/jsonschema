@@ -64,7 +64,7 @@ impl Validate for MultipleTypesValidator {
     }
     fn validate<'i>(
         &self,
-        instance: &'i Value,
+        instance: &'i dyn crate::value::Value,
         location: &LazyLocation,
     ) -> Result<(), ValidationError<'i>> {
         if self.is_valid(instance) {

@@ -16,7 +16,7 @@ use std::{
 #[derive(Debug)]
 pub struct ValidationError<'a> {
     /// Value of the property that failed validation.
-    pub instance: Cow<'a, Value>,
+    pub instance: Cow<'a, dyn crate::value::Value>,
     /// Type of validation error.
     pub kind: ValidationErrorKind,
     /// Path to the value that failed validation.
@@ -621,7 +621,7 @@ impl<'a> ValidationError<'a> {
     pub(crate) const fn multiple_type_error(
         location: Location,
         instance_path: Location,
-        instance: &'a Value,
+        instance: &'a crate::value::Value,
         types: PrimitiveTypesBitMap,
     ) -> ValidationError<'a> {
         ValidationError {

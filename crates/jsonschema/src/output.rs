@@ -27,14 +27,14 @@ use crate::{node::SchemaNode, paths::LazyLocation, Validator};
 pub struct Output<'a, 'b> {
     schema: &'a Validator,
     root_node: &'a SchemaNode,
-    instance: &'b serde_json::Value,
+    instance: &'b dyn crate::value::Value,
 }
 
 impl<'a, 'b> Output<'a, 'b> {
     pub(crate) const fn new<'c, 'd>(
         schema: &'c Validator,
         root_node: &'c SchemaNode,
-        instance: &'d serde_json::Value,
+        instance: &'d dyn crate::value::Value,
     ) -> Output<'c, 'd> {
         Output {
             schema,

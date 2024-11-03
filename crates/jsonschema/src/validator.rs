@@ -1,6 +1,7 @@
 //! Building a JSON Schema validator.
 //! The main idea is to create a tree from the input JSON Schema. This tree will contain
 //! everything needed to perform such validation in runtime.
+use crate::value::Value;
 use crate::{
     error::{error, no_error, ErrorIterator},
     node::SchemaNode,
@@ -8,7 +9,6 @@ use crate::{
     paths::LazyLocation,
     Draft, ValidationError, ValidationOptions,
 };
-use serde_json::Value;
 use std::{collections::VecDeque, sync::Arc};
 
 /// The Validate trait represents a predicate over some JSON value. Some validators are very simple
@@ -26,7 +26,11 @@ use std::{collections::VecDeque, sync::Arc};
 /// `is_valid`. `apply` is only necessary for validators which compose other validators. See the
 /// documentation for `apply` for more information.
 pub(crate) trait Validate: Send + Sync {
-    fn iter_errors<'i>(&self, instance: &'i Value, location: &LazyLocation) -> ErrorIterator<'i> {
+    fn iter_errors<'i>(
+        &self,
+        instance: &'i dyn Value,
+        location: &LazyLocation,
+    ) -> ErrorIterator<'i> {
         match self.validate(instance, location) {
             Ok(()) => no_error(),
             Err(err) => error(err),
@@ -35,11 +39,11 @@ pub(crate) trait Validate: Send + Sync {
     // The same as above, but does not construct ErrorIterator.
     // It is faster for cases when the result is not needed (like anyOf), since errors are
     // not constructed
-    fn is_valid(&self, instance: &Value) -> bool;
+    fn is_valid(&self, instance: &dyn Value) -> bool;
 
     fn validate<'i>(
         &self,
-        instance: &'i Value,
+        instance: &'i dyn Value,
         location: &LazyLocation,
     ) -> Result<(), ValidationError<'i>>;
 
@@ -86,7 +90,11 @@ pub(crate) trait Validate: Send + Sync {
     ///
     /// `BasicOutput` also implements `Sum<BasicOutput>` and `FromIterator<BasicOutput<'a>> for PartialApplication<'a>`
     /// so you can use `sum()` and `collect()` in simple cases.
-    fn apply<'a>(&'a self, instance: &Value, location: &LazyLocation) -> PartialApplication<'a> {
+    fn apply<'a>(
+        &'a self,
+        instance: &dyn Value,
+        location: &LazyLocation,
+    ) -> PartialApplication<'a> {
         let errors: Vec<ErrorDescription> = self
             .iter_errors(instance, location)
             .map(ErrorDescription::from)
@@ -190,7 +198,7 @@ impl Validator {
         ValidationOptions::default()
     }
     /// Create a validator using the default options.
-    pub fn new(schema: &Value) -> Result<Validator, ValidationError<'static>> {
+    pub fn new(schema: &dyn Value) -> Result<Validator, ValidationError<'static>> {
         Self::options().build(schema)
     }
     /// Run validation against `instance` and return an iterator over [`ValidationError`] in the error case.
@@ -252,7 +260,7 @@ impl Validator {
     /// # }
     /// ```
     #[must_use]
-    pub const fn apply<'a, 'b>(&'a self, instance: &'b Value) -> Output<'a, 'b> {
+    pub const fn apply<'a, 'b>(&'a self, instance: &'b dyn Value) -> Output<'a, 'b> {
         Output::new(self, &self.root, instance)
     }
 
